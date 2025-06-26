@@ -1,0 +1,31 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: TaskFlow
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/taskflow
+    username: postgres
+    password: admin
+
+    jpa:
+      hibernate:
+        ddl-auto: validate
+      show-sql: true
+
+    flyway:
+      enabled: true
+      locations: classpath:db/migration
+
+jwt:
+  secret: 8og8hMAzVySS2mpou3mTsn1ZOzjR8Pu0f11YCOKtjvT9GvEnRIm8Pd30KoOXiJYI
+
+logging:
+  level:
+    root: INFO
+    org.hibernate: WARN
+    org.springframework.web: WARN
+    org.springframework.security: WARN

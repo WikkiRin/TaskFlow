@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: TaskFlow-Test
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+    jpa:
+      hibernate:
+        ddl-auto: create-drop
+      show-sql: true
+
+    flyway:
+      enabled: true
+      locations: classpath:db/migration
+
+    profiles:
+      active: test
+jwt:
+  secret: test-test-test-test-test-test-test-test-test-test-test-test
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
