@@ -11,6 +11,7 @@ import com.pet.taskflow.repository.TaskRepository
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
+import jakarta.persistence.EntityNotFoundException
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -217,7 +218,7 @@ class TaskServiceTest {
         every { taskRepository.findById(id) } returns Optional.empty()
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<EntityNotFoundException> {
             testObj.findById(id)
         }
 
@@ -347,7 +348,7 @@ class TaskServiceTest {
         every { taskRepository.existsById(id) } returns false
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<EntityNotFoundException> {
             testObj.deleteTask(id)
         }
 

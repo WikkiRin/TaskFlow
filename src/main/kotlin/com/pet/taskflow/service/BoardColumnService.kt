@@ -6,6 +6,7 @@ import com.pet.taskflow.dto.UpdateColumnRequest
 import com.pet.taskflow.entity.BoardColumn
 import com.pet.taskflow.mapper.BoardColumnMapper
 import com.pet.taskflow.repository.BoardColumnRepository
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -37,7 +38,7 @@ class BoardColumnService(
 
     fun findById(id: Long): BoardColumn {
         return columnRepository.findById(id).orElseThrow {
-            IllegalArgumentException("Колонка с id=$id не найдена")
+            EntityNotFoundException("Колонка с id=$id не найдена")
         }
     }
 
@@ -53,7 +54,7 @@ class BoardColumnService(
 
     fun deleteColumn(id: Long) {
         if (!columnRepository.existsById(id)) {
-            throw IllegalArgumentException("Колонка с id=$id не найдена")
+            throw EntityNotFoundException("Колонка с id=$id не найдена")
         }
         columnRepository.deleteById(id)
         log.info("Удалена колонка id=$id")

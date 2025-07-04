@@ -1,3 +1,8 @@
 package com.pet.taskflow.dto
 
-data class BoardRequest(val title: String)
+import jakarta.validation.constraints.NotBlank
+
+data class BoardRequest(
+    @field:NotBlank(message = "Заголовок не может быть пустым")
+    val title: String
+)

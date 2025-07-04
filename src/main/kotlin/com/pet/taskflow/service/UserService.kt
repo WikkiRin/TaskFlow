@@ -3,7 +3,9 @@ package com.pet.taskflow.service
 import com.pet.taskflow.controller.TaskController
 import com.pet.taskflow.dto.UserDto
 import com.pet.taskflow.entity.User
+import com.pet.taskflow.exception.UserAlreadyExistsException
 import com.pet.taskflow.repository.UserRepository
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -18,7 +20,7 @@ class UserService(
 
     fun findById(id: Long): User {
         return userRepository.findById(id).orElseThrow {
-            IllegalArgumentException("Пользователь с id=$id не найден")
+            EntityNotFoundException("Пользователь с id=$id не найден")
         }.also {
             log.info("Найден пользователь id=$id")
         }
@@ -36,12 +38,12 @@ class UserService(
 
     fun loadByUsername(username: String): User {
         return userRepository.findByUsername(username)
-            ?: throw UsernameNotFoundException("User '$username' not found")
+            ?: throw UsernameNotFoundException("Пользователь '$username' не найден")
     }
 
     fun register(username: String, email: String, rawPassword: String): User {
         if (userRepository.findByUsername(username) != null) {
-            throw IllegalArgumentException("Username already taken")
+            throw UserAlreadyExistsException("Имя пользователя уже занято")
         }
         val encodedPassword = passwordEncoder.encode(rawPassword)
         val user = User(username = username, email = email, password = encodedPassword)

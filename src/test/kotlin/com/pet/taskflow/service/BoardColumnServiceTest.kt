@@ -10,6 +10,7 @@ import com.pet.taskflow.repository.BoardColumnRepository
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
+import jakarta.persistence.EntityNotFoundException
 import org.junit.jupiter.api.*
 import java.util.*
 
@@ -149,7 +150,7 @@ class BoardColumnServiceTest {
         every { columnRepository.findById(id) } returns Optional.empty()
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<EntityNotFoundException> {
             testObj.findById(id)
         }
 
@@ -206,7 +207,7 @@ class BoardColumnServiceTest {
         every { columnRepository.existsById(id) } returns false
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<EntityNotFoundException> {
             testObj.deleteColumn(id)
         }
 

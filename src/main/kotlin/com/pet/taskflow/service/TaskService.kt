@@ -6,6 +6,7 @@ import com.pet.taskflow.dto.UpdateTaskRequest
 import com.pet.taskflow.entity.Task
 import com.pet.taskflow.mapper.TaskMapper
 import com.pet.taskflow.repository.TaskRepository
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -37,7 +38,7 @@ class TaskService(
 
     fun findById(id: Long): Task {
         return taskRepository.findById(id).orElseThrow {
-            IllegalArgumentException("Задача с id=$id не найдена")
+            EntityNotFoundException("Задача с id=$id не найдена")
         }
     }
 
@@ -55,7 +56,7 @@ class TaskService(
 
     fun deleteTask(id: Long) {
         if (!taskRepository.existsById(id)) {
-            throw IllegalArgumentException("Задача с id=$id не найдена")
+            throw EntityNotFoundException("Задача с id=$id не найдена")
         }
         taskRepository.deleteById(id)
         log.info("Задача id=$id удалена")

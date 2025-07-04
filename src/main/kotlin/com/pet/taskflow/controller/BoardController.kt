@@ -6,6 +6,7 @@ import com.pet.taskflow.service.BoardService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -24,7 +25,7 @@ class BoardController(
     @Operation(summary = "Создать новую доску")
     @PostMapping
     fun createBoard(
-        @RequestBody request: BoardRequest,
+        @Valid @RequestBody request: BoardRequest,
         @AuthenticationPrincipal user: UserDetails
     ): ResponseEntity<BoardDto> {
         log.info("Создание доски пользователем: ${user.username}, имя: '${request.title}'")
@@ -51,7 +52,7 @@ class BoardController(
     @PutMapping("/{id}")
     fun updateBoard(
         @PathVariable id: Long,
-        @RequestBody request: BoardRequest
+        @Valid @RequestBody request: BoardRequest
     ): BoardDto {
         log.info("Обновление доски id=$id, новое имя='${request.title}'")
         return boardService.updateBoard(id, request)

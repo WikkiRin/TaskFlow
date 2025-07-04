@@ -5,6 +5,7 @@ import com.pet.taskflow.dto.BoardRequest
 import com.pet.taskflow.entity.Board
 import com.pet.taskflow.mapper.BoardMapper
 import com.pet.taskflow.repository.BoardRepository
+import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -55,11 +56,11 @@ class BoardService(
      *
      * @param id идентификатор доски
      * @return объект [Board]
-     * @throws IllegalArgumentException если доска не найдена
+     * @throws EntityNotFoundException если доска не найдена
      */
     fun findById(id: Long): Board {
         return boardRepository.findById(id).orElseThrow {
-            IllegalArgumentException("Доска с id=$id не найдена")
+            EntityNotFoundException("Доска с id=$id не найдена")
         }
     }
 
@@ -73,7 +74,7 @@ class BoardService(
 
     fun deleteBoard(id: Long) {
         if (!boardRepository.existsById(id)) {
-            throw IllegalArgumentException("Невозможно удалить: доска с id=$id не найдена")
+            throw EntityNotFoundException("Невозможно удалить: доска с id=$id не найдена")
         }
         boardRepository.deleteById(id)
         log.info("Удалена доска id=$id")

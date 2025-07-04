@@ -2,10 +2,12 @@ package com.pet.taskflow.service
 
 import com.pet.taskflow.dto.UserDto
 import com.pet.taskflow.entity.User
+import com.pet.taskflow.exception.UserAlreadyExistsException
 import com.pet.taskflow.repository.UserRepository
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
+import jakarta.persistence.EntityNotFoundException
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.security.core.userdetails.UsernameNotFoundException
@@ -56,7 +58,7 @@ class UserServiceTest {
         every { userRepository.findById(id) } returns Optional.empty()
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<EntityNotFoundException> {
             testObj.findById(id)
         }
 
@@ -116,7 +118,7 @@ class UserServiceTest {
         }
 
         // THEN
-        assertEquals("User '$username' not found", ex.message)
+        assertEquals("Пользователь '$username' не найден", ex.message)
 
         verify { userRepository.findByUsername(username) }
 
@@ -160,12 +162,12 @@ class UserServiceTest {
         every { userRepository.findByUsername("taken") } returns existing
 
         // WHEN
-        val ex = assertThrows<IllegalArgumentException> {
+        val ex = assertThrows<UserAlreadyExistsException> {
             testObj.register("taken", "taken@mail.com", "password")
         }
 
         // THEN
-        assertEquals("Username already taken", ex.message)
+        assertEquals("Имя пользователя уже занято", ex.message)
 
         verify { userRepository.findByUsername("taken") }
 
