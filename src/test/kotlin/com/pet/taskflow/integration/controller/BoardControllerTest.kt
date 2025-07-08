@@ -72,7 +72,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `getBoards should return list of boards for current user`() {
-//        testDataLoader.clearAll()
         testDataLoader.createBoardsForUser("user", count = 4)
 
         val result = mockMvc.perform(get("/api/boards"))
@@ -91,7 +90,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `getBoards should return empty list if user has no boards`() {
-//        testDataLoader.clearAll()
         testDataLoader.createUser("user")
 
         val result = mockMvc.perform(get("/api/boards"))
@@ -108,7 +106,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `getBoard should return board by id`() {
-//        testDataLoader.clearAll()
         val board = testDataLoader.createBoard(title = "Important Board", username = "user")
 
         val response = mockMvc.perform(get("/api/boards/${board.id}"))
@@ -126,7 +123,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `getBoard should return 404 when board not found`() {
-//        testDataLoader.clearAll()
         val nonexistentId = 99L
 
         mockMvc.perform(get("/api/boards/$nonexistentId"))
@@ -140,7 +136,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `updateBoard should update board title by id`() {
-//        testDataLoader.clearAll()
         val board = testDataLoader.createBoard(title = "Old Title", username = "user")
 
         val updateRequest = BoardRequest(title = "Updated Title")
@@ -164,7 +159,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `updateBoard should return 400 when title is blank`() {
-//        testDataLoader.clearAll()
         val board = testDataLoader.createBoard(title = "Valid", username = "user")
 
         val invalidRequest = BoardRequest(title = " ")
@@ -181,13 +175,12 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `updateBoard should return 404 when updating non-existent board`() {
-//        testDataLoader.clearAll()
-        val nonExistentId = 9999L
+        val nonexistentId = 9999L
 
         val updateRequest = BoardRequest(title = "New Title")
 
         mockMvc.perform(
-            put("/api/boards/$nonExistentId")
+            put("/api/boards/$nonexistentId")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateRequest))
         )
@@ -198,7 +191,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `deleteBoard should delete board by id`() {
-//        testDataLoader.clearAll()
         val board = testDataLoader.createBoard(title = "To be deleted", username = "user")
 
         mockMvc.perform(delete("/api/boards/${board.id}"))
@@ -212,7 +204,6 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `deleteBoard should return 404 when deleting non-existent board`() {
-//        testDataLoader.clearAll()
         val nonexistentId = 9999L
 
         mockMvc.perform(delete("/api/boards/$nonexistentId"))

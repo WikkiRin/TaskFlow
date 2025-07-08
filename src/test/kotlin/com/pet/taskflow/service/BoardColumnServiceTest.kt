@@ -110,6 +110,7 @@ class BoardColumnServiceTest {
             BoardColumnDto(id = 2L, name = "In Progress", position = 1, boardId = board.id)
         )
 
+        every { boardService.findById(3L) } returns board
         every { columnRepository.findAllByBoardIdOrderByPosition(3L) } returns columns
         every { columnMapper.toDto(columns[0]) } returns dtos[0]
         every { columnMapper.toDto(columns[1]) } returns dtos[1]
@@ -121,11 +122,36 @@ class BoardColumnServiceTest {
         assert(result == dtos)
 
         verifySequence {
+            boardService.findById(3L)
             columnRepository.findAllByBoardIdOrderByPosition(3L)
             columnMapper.toDto(columns[0])
             columnMapper.toDto(columns[1])
         }
         verify(exactly = 2) { columnMapper.toDto(any()) }
+    }
+
+
+    @Test
+    fun `getColumnById should return BoardColumnDto if exists`() {
+        // GIVEN
+        val board = Board(id = 3L, title = "Project H", owner = mockk())
+        val column = BoardColumn(id = 1L, name = "To Do", board = board, position = 0)
+        val dto = BoardColumnDto(id = 1L, name = "To Do", boardId = board.id, position = 0)
+
+        // создаём spyk на тестируемый объект
+        val spyService = spyk(testObj)
+
+        every { spyService.findById(1L) } returns column
+        every { columnMapper.toDto(column) } returns dto
+
+        // WHEN
+        val result = spyService.getColumnById(1L)
+
+        // THEN
+        assert(result == dto)
+
+        verify { spyService.findById(1L) }
+        verify { columnMapper.toDto(column) }
     }
 
     @Test

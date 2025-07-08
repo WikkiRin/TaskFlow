@@ -31,11 +31,38 @@ class BoardColumnService(
     }
 
     fun getColumnsByBoard(boardId: Long): List<BoardColumnDto> {
-        val columns = columnRepository.findAllByBoardIdOrderByPosition(boardId)
-        log.info("Получено ${columns.size} колонок для доски id=$boardId")
+        val board = boardService.findById(boardId)
+        val columns = columnRepository.findAllByBoardIdOrderByPosition(board.id)
+        log.info("Получено ${columns.size} колонок для доски id=$board.id")
         return columns.map { columnMapper.toDto(it) }
     }
 
+    /**
+     * Возвращает колонку в виде DTO для отображения на клиенте.
+     *
+     * Используется в контроллерах и других местах, где нужна
+     * безопасная и ограниченная информация о колонке.
+     *
+     * @param id идентификатор колонки
+     * @return объект [BoardColumnDto], соответствующий указанному ID
+     * @throws EntityNotFoundException если колонка не найдена
+     */
+    fun getColumnById(id: Long): BoardColumnDto {
+        val column = findById(id)
+        log.info("Получена колонка id=$id")
+        return columnMapper.toDto(column)
+    }
+
+    /**
+     * Возвращает сущность колонки для внутреннего использования.
+     *
+     * Применяется в сервисах, когда необходимо создать или связать
+     * другие сущности (например, задачу), используя [BoardColumn].
+     *
+     * @param id идентификатор колонки
+     * @return объект [BoardColumn]
+     * @throws EntityNotFoundException если колонка не найдена
+     */
     fun findById(id: Long): BoardColumn {
         return columnRepository.findById(id).orElseThrow {
             EntityNotFoundException("Колонка с id=$id не найдена")
@@ -44,7 +71,6 @@ class BoardColumnService(
 
     fun updateColumn(id: Long, request: UpdateColumnRequest): BoardColumnDto {
         val existing = findById(id)
-
         val updated = columnMapper.updateEntity(existing, request)
         val saved = columnRepository.save(updated)
 

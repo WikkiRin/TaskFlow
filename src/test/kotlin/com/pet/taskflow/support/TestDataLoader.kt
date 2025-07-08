@@ -1,7 +1,9 @@
 package com.pet.taskflow.support
 
 import com.pet.taskflow.entity.Board
+import com.pet.taskflow.entity.BoardColumn
 import com.pet.taskflow.entity.User
+import com.pet.taskflow.repository.BoardColumnRepository
 import com.pet.taskflow.repository.BoardRepository
 import com.pet.taskflow.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component
  * Пример использования в тестах:
  * ```
  * testDataLoader.createBoardsForUser("user", 3)
+ * testDataLoader.createColumn("To do", board, 1)
  * ```
  */
 
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Component
 class TestDataLoader(
     private val userRepository: UserRepository,
     private val boardRepository: BoardRepository,
+    private val boardColumnRepository: BoardColumnRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
 
@@ -50,6 +54,15 @@ class TestDataLoader(
         return boardRepository.save(board)
     }
 
+    fun createColumn(name: String, board: Board, position: Int = 0): BoardColumn {
+        val column = BoardColumn(
+            name = name,
+            position = position,
+            board = board
+        )
+        return boardColumnRepository.save(column)
+    }
+
     fun createBoardsForUser(
         username: String = "user",
         count: Int = 3
@@ -63,6 +76,7 @@ class TestDataLoader(
 
     fun clearAll() {
         boardRepository.deleteAll()
+        boardColumnRepository.deleteAll()
         userRepository.deleteAll()
     }
 }

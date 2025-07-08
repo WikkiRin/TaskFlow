@@ -40,7 +40,7 @@ class BoardService(
      *
      * @param id идентификатор доски
      * @return объект [BoardDto], соответствующий указанному ID
-     * @throws IllegalArgumentException если доска не найдена
+     * @throws EntityNotFoundException если доска не найдена
      */
     fun getBoardById(id: Long): BoardDto {
         val board = findById(id)
