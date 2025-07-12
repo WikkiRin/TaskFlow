@@ -2,9 +2,9 @@ package com.pet.taskflow.integration.controller
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.pet.taskflow.dto.BoardColumnDto
-import com.pet.taskflow.dto.CreateColumnRequest
-import com.pet.taskflow.dto.UpdateColumnRequest
+import com.pet.taskflow.dto.CreateTaskRequest
+import com.pet.taskflow.dto.TaskDto
+import com.pet.taskflow.dto.UpdateTaskRequest
 import com.pet.taskflow.integration.config.BasePostgresContainer
 import com.pet.taskflow.integration.config.TestSecurityConfig
 import com.pet.taskflow.support.TestDataLoader
@@ -30,7 +30,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestSecurityConfig::class)
-class BoardColumnControllerTest @Autowired constructor(
+class TaskControllerTest @Autowired constructor(
     val mockMvc: MockMvc,
     val objectMapper: ObjectMapper,
     val testDataLoader: TestDataLoader
@@ -44,136 +44,151 @@ class BoardColumnControllerTest @Autowired constructor(
 
     @Test
     @WithMockUser(username = "user")
-    fun `createColumn should create column and return 200`() {
+    fun `createTask should create task and return 200`() {
         val board = testDataLoader.createBoard(title = "Board A", username = "user")
-        val request = CreateColumnRequest(name = "To Do", boardId = board.id)
+        val column = testDataLoader.createColumn("To Do", board)
+
+        val request = CreateTaskRequest(
+            title = "New Task",
+            columnId = column.id,
+            description = "Task description",
+            position = 0
+        )
 
         val response = mockMvc.perform(
-            post("/api/columns")
+            post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.name").value("To Do"))
-            .andExpect(jsonPath("$.boardId").value(board.id))
+            .andExpect(jsonPath("$.title").value("New Task"))
+            .andExpect(jsonPath("$.description").value("Task description"))
+            .andExpect(jsonPath("$.columnId").value(column.id))
             .andReturn()
 
-        val result: BoardColumnDto = objectMapper.readValue(
-            response.response.contentAsString,
-            BoardColumnDto::class.java
-        )
-        assertEquals("To Do", result.name)
-        assertEquals(board.id, result.boardId)
+        val result: TaskDto = objectMapper.readValue(response.response.contentAsString, TaskDto::class.java)
+        assertEquals("New Task", result.title)
+        assertEquals("Task description", result.description)
+        assertEquals(column.id, result.columnId)
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `createColumn should return 400 when column name is blank`() {
-        val board = testDataLoader.createBoard(title = "Board A", username = "user")
-        val request = CreateColumnRequest(name = " ", boardId = board.id)
+    fun `createTask should return 400 when title is blank`() {
+        val board = testDataLoader.createBoard("Board A", "user")
+        val column = testDataLoader.createColumn("To Do", board)
+        val request = CreateTaskRequest(
+            title = "   ",
+            columnId = column.id
+        )
 
         mockMvc.perform(
-            post("/api/columns")
+            post("/api/tasks")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.message").value(containsString("не может быть пустым")))
+            .andExpect(jsonPath("$.message", containsString("не может быть пустым")))
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `getColumns should return all columns for given board`() {
-        val board = testDataLoader.createBoard(title = "Project J", username = "user")
+    fun `getTasks should return list of tasks for column`() {
+        val board = testDataLoader.createBoard("Project Board", "user")
+        val column = testDataLoader.createColumn("To Do", board)
 
-        testDataLoader.createColumns(board, count = 4)
+        testDataLoader.createTasks(column, count = 4)
 
-        val response = mockMvc.perform(get("/api/columns/board/${board.id}"))
+        val response = mockMvc.perform(
+            get("/api/tasks/column/${column.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isOk)
             .andReturn()
 
-        val responseBody = response.response.contentAsString
-        val columns: List<BoardColumnDto> =
-            objectMapper.readValue(responseBody, object : TypeReference<List<BoardColumnDto>>() {})
+        val result: List<TaskDto> = objectMapper.readValue(
+            response.response.contentAsString,
+            object : TypeReference<List<TaskDto>>() {}
+        )
 
-        assertEquals(4, columns.size)
-        assertTrue(columns.all { it.boardId == board.id })
-        columns.forEach { column ->
-            assertNotNull(column.name)
+        assertEquals(4, result.size)
+        assertTrue(result.all { it.columnId == column.id })
+        result.forEach { task ->
+            assertNotNull(task.title)
         }
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `getColumns should return 404 when board does not exist`() {
-        val nonexistentBoardId = 9999L
+    fun `getTasks should return 404 when column not found`() {
+        val nonExistentColumnId = 9999L
 
-        mockMvc.perform(get("/api/columns/board/$nonexistentBoardId"))
+        mockMvc.perform(
+            get("/api/tasks/column/$nonExistentColumnId")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value(containsString("не найдена")))
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `getColumn should return column by id`() {
+    fun `getTask should return task by id`() {
         val board = testDataLoader.createBoard(title = "Important Board", username = "user")
         val column = testDataLoader.createColumn(name = "To Do", board = board, position = 0)
+        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column)
 
-        val response = mockMvc.perform(get("/api/columns/${column.id}"))
+        val response = mockMvc.perform(get("/api/tasks/${task.id}"))
             .andExpect(status().isOk)
             .andReturn()
 
         val responseBody = response.response.contentAsString
-        val result: BoardColumnDto = objectMapper.readValue(responseBody, BoardColumnDto::class.java)
+        val result: TaskDto = objectMapper.readValue(responseBody, TaskDto::class.java)
 
-        assertEquals(column.id, result.id)
-        assertEquals(column.name, result.name)
-        assertEquals(column.board.id, result.boardId)
+        assertEquals(task.id, result.id)
+        assertEquals(task.title, result.title)
+        assertEquals(task.boardColumn.id, result.columnId)
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `getColumn should return 404 when board not found`() {
+    fun `getTask should return 404 when task not found`() {
         val nonexistentId = 9999L
 
-        mockMvc.perform(get("/api/columns/${nonexistentId}"))
+        mockMvc.perform(get("/api/tasks/${nonexistentId}"))
             .andExpect(status().isNotFound)
-            .andExpect(
-                jsonPath("$.message").value(containsString("не найдена"))
-            )
+            .andExpect(jsonPath("$.message").value(containsString("не найдена")))
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `updateColumn should update column and return 200`() {
+    fun `updateTask should update task and return 200`() {
         val board = testDataLoader.createBoard(title = "Test Board", username = "user")
         val column = testDataLoader.createColumn(name = "To Do", board = board, position = 0)
+        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column)
 
-        val request = UpdateColumnRequest(
-            name = "In Progress",
-            position = 1
-        )
+        val request = UpdateTaskRequest(title = "Update Task", position = 1)
 
         mockMvc.perform(
-            put("/api/columns/${column.id}")
+            put("/api/tasks/${task.id}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
             .andExpect(status().isOk)
-            .andExpect(jsonPath("$.id").value(column.id))
-            .andExpect(jsonPath("$.name").value("In Progress"))
+            .andExpect(jsonPath("$.id").value(task.id))
+            .andExpect(jsonPath("$.title").value("Update Task"))
             .andExpect(jsonPath("$.position").value(1))
-            .andExpect(jsonPath("$.boardId").value(board.id))
+            .andExpect(jsonPath("$.columnId").value(column.id))
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `updateColumn should return 404 when column not found`() {
-        val request = UpdateColumnRequest(name = "Updated", position = 2)
+    fun `updateTask should return 404 when task not found`() {
+        val request = UpdateTaskRequest(title = "Update Task", position = 1)
         val nonexistentId = 9999L
 
         mockMvc.perform(
-            put("/api/columns/$nonexistentId")
+            put("/api/tasks/${nonexistentId}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -183,14 +198,14 @@ class BoardColumnControllerTest @Autowired constructor(
 
     @Test
     @WithMockUser(username = "user")
-    fun `updateColumn should return 400 when name is blank`() {
-        val board = testDataLoader.createBoard("Board", "user")
-        val column = testDataLoader.createColumn("Column", board, position = 0)
+    fun `updateTask should return 400 when title is blank`() {
+        val board = testDataLoader.createBoard(title = "Test Board", username = "user")
+        val column = testDataLoader.createColumn(name = "To Do", board = board, position = 0)
+        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column)
 
-        val request = UpdateColumnRequest(name = " ")
-
+        val request = UpdateTaskRequest(title = "  ")
         mockMvc.perform(
-            put("/api/columns/${column.id}")
+            put("/api/tasks/${task.id}")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request))
         )
@@ -200,26 +215,28 @@ class BoardColumnControllerTest @Autowired constructor(
 
     @Test
     @WithMockUser(username = "user")
-    fun `deleteColumn should delete column by id`() {
+    fun `deleteTask should delete column by id`() {
         val board = testDataLoader.createBoard(title = "Test Board", username = "user")
-        val column = testDataLoader.createColumn(name = "To Delete", board = board)
+        val column = testDataLoader.createColumn(name = "To Do", board = board, position = 0)
+        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column)
 
-        mockMvc.perform(delete("/api/columns/${column.id}"))
+        mockMvc.perform(delete("/api/tasks/${task.id}"))
             .andExpect(status().isNoContent)
 
-        // Проверка, что колонка больше не возвращается
-        mockMvc.perform(get("/api/columns/${column.id}"))
+        // Проверка, что задача больше не возвращается
+        mockMvc.perform(get("/api/tasks/${task.id}"))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value(containsString("не найдена")))
     }
 
     @Test
     @WithMockUser(username = "user")
-    fun `deleteColumn should return 404 when deleting non-existent column`() {
+    fun `deleteTask should return 404 when deleting non-existent task`() {
         val nonexistentId = 9999L
 
-        mockMvc.perform(delete("/api/columns/$nonexistentId"))
+        mockMvc.perform(delete("/api/tasks/$nonexistentId"))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value(containsString("не найдена")))
+
     }
 }

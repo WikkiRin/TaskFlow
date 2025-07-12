@@ -182,6 +182,7 @@ class TaskServiceTest {
                 position = 1
             )
         )
+        every { boardColumnService.findById(3L) } returns column
         every { taskRepository.findAllByBoardColumnIdOrderByPosition(3L) } returns tasks
         every { taskMapper.toDto(tasks[0]) } returns dtos[0]
         every { taskMapper.toDto(tasks[1]) } returns dtos[1]
@@ -192,9 +193,47 @@ class TaskServiceTest {
         // THEN
         assert(result == dtos)
 
+        verify { boardColumnService.findById(3L) }
         verify { taskRepository.findAllByBoardColumnIdOrderByPosition(3L) }
         verify(exactly = 2) { taskMapper.toDto(any()) }
 
+    }
+
+    @Test
+    fun `getTaskById should return TaskDto if exists`() {
+        // GIVEN
+        val column = BoardColumn(id = 3L, name = "To do", board = mockk(), position = 0)
+        val task = Task(
+            id = 103L,
+            title = "Task-3",
+            description = "Description-3",
+            boardColumn = column,
+            assignee = null,
+            position = 0
+        )
+        val dto = TaskDto(
+            id = 103L,
+            title = "Task-3",
+            description = "Description-3",
+            columnId = column.id,
+            assigneeId = null,
+            position = 0
+        )
+
+        // создаём spyk на тестируемый объект
+        val spyService = spyk(testObj)
+
+        every { spyService.findById(103L) } returns task
+        every { taskMapper.toDto(task) } returns dto
+
+        // WHEN
+        val result = spyService.getTaskById(103L)
+
+        // THEN
+        assert(result == dto)
+
+        verify { spyService.findById(103L) }
+        verify { taskMapper.toDto(task) }
     }
 
     @Test

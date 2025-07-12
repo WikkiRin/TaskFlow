@@ -12,8 +12,10 @@ data class BoardColumn(
     @field:NotBlank(message = "Название не может быть пустым")
     @Column(nullable = false)
     val name: String,
-    val position: Int,
+
+    val position: Int? = null,
 
     @ManyToOne
+    @JoinColumn(name = "board_id")
     val board: Board
 )

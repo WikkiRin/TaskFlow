@@ -72,7 +72,7 @@ class BoardControllerTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user")
     fun `getBoards should return list of boards for current user`() {
-        testDataLoader.createBoardsForUser("user", count = 4)
+        testDataLoader.createBoards("user", count = 4)
 
         val result = mockMvc.perform(get("/api/boards"))
             .andExpect(status().isOk)
@@ -81,7 +81,7 @@ class BoardControllerTest @Autowired constructor(
         val content = result.response.contentAsString
         val boards: List<BoardDto> = objectMapper.readValue(content, object : TypeReference<List<BoardDto>>() {})
 
-        assertTrue(boards.isNotEmpty(), "Список досок не должен быть пустым")
+        assertEquals(4, boards.size)
         boards.forEach { board ->
             assertNotNull(board.title)
         }

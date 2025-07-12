@@ -2,9 +2,11 @@ package com.pet.taskflow.support
 
 import com.pet.taskflow.entity.Board
 import com.pet.taskflow.entity.BoardColumn
+import com.pet.taskflow.entity.Task
 import com.pet.taskflow.entity.User
 import com.pet.taskflow.repository.BoardColumnRepository
 import com.pet.taskflow.repository.BoardRepository
+import com.pet.taskflow.repository.TaskRepository
 import com.pet.taskflow.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
@@ -15,8 +17,9 @@ import org.springframework.stereotype.Component
  *
  * Пример использования в тестах:
  * ```
- * testDataLoader.createBoardsForUser("user", 3)
- * testDataLoader.createColumn("To do", board, 1)
+ * testDataLoader.createBoards("user", 3)
+ * testDataLoader.createColumns(board, 3)
+ * testDataLoader.createTasks(boardColumn, 3)
  * ```
  */
 
@@ -25,6 +28,7 @@ class TestDataLoader(
     private val userRepository: UserRepository,
     private val boardRepository: BoardRepository,
     private val boardColumnRepository: BoardColumnRepository,
+    private val taskRepository: TaskRepository,
     private val passwordEncoder: PasswordEncoder
 ) {
 
@@ -54,16 +58,7 @@ class TestDataLoader(
         return boardRepository.save(board)
     }
 
-    fun createColumn(name: String, board: Board, position: Int = 0): BoardColumn {
-        val column = BoardColumn(
-            name = name,
-            position = position,
-            board = board
-        )
-        return boardColumnRepository.save(column)
-    }
-
-    fun createBoardsForUser(
+    fun createBoards(
         username: String = "user",
         count: Int = 3
     ): List<Board> {
@@ -74,9 +69,58 @@ class TestDataLoader(
         return boardRepository.saveAll(boards)
     }
 
+    fun createColumn(
+        name: String,
+        board: Board,
+        position: Int = 0
+    ): BoardColumn {
+        val column = BoardColumn(
+            name = name,
+            position = position,
+            board = board
+        )
+        return boardColumnRepository.save(column)
+    }
+
+    fun createColumns(
+        board: Board,
+        count: Int = 3
+    ) : List<BoardColumn> {
+        val columns = (1..count).map {
+            BoardColumn(name = "Column $it", board = board)
+        }
+        return boardColumnRepository.saveAll(columns)
+    }
+
+    fun createTask(
+        title: String,
+        boardColumn: BoardColumn,
+        description: String = "",
+        position: Int = 0
+    ): Task {
+        val task = Task(
+            title = title,
+            description = description,
+            position = position,
+            boardColumn = boardColumn
+        )
+        return taskRepository.save(task)
+    }
+
+    fun createTasks(
+        boardColumn: BoardColumn,
+        count: Int = 3
+    ): List<Task> {
+        val tasks = (1..count).map {
+            Task(title = "Task $it", boardColumn = boardColumn)
+        }
+        return taskRepository.saveAll(tasks)
+    }
+
     fun clearAll() {
         boardRepository.deleteAll()
         boardColumnRepository.deleteAll()
+        taskRepository.deleteAll()
         userRepository.deleteAll()
     }
 }

@@ -7,6 +7,7 @@ import com.pet.taskflow.service.TaskService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.security.SecurityRequirement
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -22,7 +23,7 @@ class TaskController(
 
     @Operation(summary = "Создать задачу в колонке")
     @PostMapping
-    fun createTask(@RequestBody request: CreateTaskRequest): ResponseEntity<TaskDto> {
+    fun createTask(@Valid @RequestBody request: CreateTaskRequest): ResponseEntity<TaskDto> {
         log.info("Создание задачи в колонке id=${request.columnId}")
         val task = taskService.createTask(request)
         log.info("Задача создана: id=${task.id}")
@@ -36,11 +37,18 @@ class TaskController(
         return taskService.getTasksByColumn(columnId)
     }
 
+    @Operation(summary = "Получить задачу по ID")
+    @GetMapping("/{id}")
+    fun getTask(@PathVariable id: Long): TaskDto {
+        log.info("Получение колонки по id=$id")
+        return taskService.getTaskById(id)
+    }
+
     @Operation(summary = "Обновить задачу по ID")
     @PutMapping("/{id}")
     fun updateTask(
         @PathVariable id: Long,
-        @RequestBody request: UpdateTaskRequest
+        @Valid @RequestBody request: UpdateTaskRequest
     ): TaskDto {
         log.info("Обновление задачи id=$id")
         return taskService.updateTask(id, request)

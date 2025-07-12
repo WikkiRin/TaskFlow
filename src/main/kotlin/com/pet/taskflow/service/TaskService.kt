@@ -31,11 +31,38 @@ class TaskService(
     }
 
     fun getTasksByColumn(columnId: Long): List<TaskDto> {
-        val tasks = taskRepository.findAllByBoardColumnIdOrderByPosition(columnId)
-        log.info("Получено ${tasks.size} задач в колонке id=$columnId")
+        val column = boardColumnService.findById(columnId)
+        val tasks = taskRepository.findAllByBoardColumnIdOrderByPosition(column.id)
+        log.info("Получено ${tasks.size} задач в колонке id=${column.id}")
         return tasks.map { taskMapper.toDto(it) }
     }
 
+    /**
+     * Возвращает задачу в виде DTO для отображения на клиенте.
+     *
+     * Используется в контроллерах и других местах, где нужна
+     * безопасная и ограниченная информация о задаче.
+     *
+     * @param id идентификатор задачи
+     * @return объект [TaskDto], соответствующий указанному ID
+     * @throws EntityNotFoundException если задача не найдена
+     */
+    fun getTaskById(id: Long): TaskDto {
+        val task = findById(id)
+        log.info("Получена задача id=$id")
+        return taskMapper.toDto(task)
+    }
+
+    /**
+     * Возвращает сущность задачи для внутреннего использования.
+     *
+     * Применяется в сервисах, когда необходимо создать или связать
+     * другие сущности, используя [Task].
+     *
+     * @param id идентификатор задачи
+     * @return объект [Task]
+     * @throws EntityNotFoundException если задача не найдена
+     */
     fun findById(id: Long): Task {
         return taskRepository.findById(id).orElseThrow {
             EntityNotFoundException("Задача с id=$id не найдена")
