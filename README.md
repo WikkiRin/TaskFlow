@@ -19,6 +19,7 @@
 
 - Docker (для тестов с Testcontainers)
 - Java 17
+- PostgreSQL 15+
 - Gradle (или `./gradlew`)
 
 Порт приложения
