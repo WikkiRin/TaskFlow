@@ -4,6 +4,7 @@ import com.pet.taskflow.controller.TaskController
 import com.pet.taskflow.dto.UserDto
 import com.pet.taskflow.entity.User
 import com.pet.taskflow.exception.UserAlreadyExistsException
+import com.pet.taskflow.mapper.UserMapper
 import com.pet.taskflow.repository.UserRepository
 import jakarta.persistence.EntityNotFoundException
 import org.slf4j.LoggerFactory
@@ -14,15 +15,40 @@ import org.springframework.stereotype.Service
 @Service
 class UserService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val userMapper: UserMapper
 ) {
     private val log = LoggerFactory.getLogger(TaskController::class.java)
 
+    /**
+     * Возвращает пользователя в виде DTO для отображения на клиенте.
+     *
+     * Используется в контроллерах и других местах, где нужна
+     * безопасная и ограниченная информация о пользователе.
+     *
+     * @param id идентификатор пользователя
+     * @return объект [UserDto], соответствующий указанному ID
+     * @throws EntityNotFoundException если пользователь не найден
+     */
+    fun getUserById(id: Long): UserDto {
+        val user = findById(id)
+        log.info("Получен пользователь id=$user.id")
+        return userMapper.toDto(user)
+    }
+
+    /**
+     * Возвращает сущность пользователя для внутреннего использования.
+     *
+     * Применяется в сервисах, когда необходимо создать или связать
+     * другие сущности, используя [User].
+     *
+     * @param id идентификатор пользователя
+     * @return объект [User]
+     * @throws EntityNotFoundException если пользователь не найден
+     */
     fun findById(id: Long): User {
         return userRepository.findById(id).orElseThrow {
             EntityNotFoundException("Пользователь с id=$id не найден")
-        }.also {
-            log.info("Найден пользователь id=$id")
         }
     }
 

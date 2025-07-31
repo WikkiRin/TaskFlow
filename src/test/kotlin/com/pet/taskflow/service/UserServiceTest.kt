@@ -3,6 +3,7 @@ package com.pet.taskflow.service
 import com.pet.taskflow.dto.UserDto
 import com.pet.taskflow.entity.User
 import com.pet.taskflow.exception.UserAlreadyExistsException
+import com.pet.taskflow.mapper.UserMapper
 import com.pet.taskflow.repository.UserRepository
 import io.mockk.*
 import io.mockk.impl.annotations.InjectMockKs
@@ -23,6 +24,9 @@ class UserServiceTest {
     @MockK
     lateinit var passwordEncoder: PasswordEncoder
 
+    @MockK
+    lateinit var userMapper: UserMapper
+
     @InjectMockKs
     lateinit var testObj: UserService
 
@@ -34,6 +38,28 @@ class UserServiceTest {
     @BeforeEach
     fun setup() {
         clearMocks(userRepository, passwordEncoder)
+    }
+
+    @Test
+    fun `getUserById should return UserDto if exists`() {
+        // GIVEN
+        val user = User(id = 1L, username = "user-1", email = "user-1@ex.com", password = "user-1-pass")
+        val dto = UserDto(id = 1L, username = "user-1", email = "user-1@ex.com")
+
+        // создаём spyk на тестируемый объект
+        val spyService = spyk(testObj)
+
+        every { spyService.findById(1L) } returns user
+        every { userMapper.toDto(user) } returns dto
+
+        // WHEN
+        val result = spyService.getUserById(1L)
+
+        // THEN
+        assert(result == dto)
+
+        verify { spyService.findById(1L) }
+        verify { userMapper.toDto(user) }
     }
 
     @Test

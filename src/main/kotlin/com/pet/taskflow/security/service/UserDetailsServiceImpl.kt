@@ -1,9 +1,9 @@
 package com.pet.taskflow.security.service
 
+import com.pet.taskflow.security.model.CustomUserDetails
 import com.pet.taskflow.service.UserService
 import org.slf4j.LoggerFactory
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
@@ -14,7 +14,7 @@ class UserDetailsServiceImpl(
 ) : UserDetailsService {
     private val logger = LoggerFactory.getLogger(UserDetailsServiceImpl::class.java)
 
-    override fun loadUserByUsername(username: String): UserDetails {
+    override fun loadUserByUsername(username: String): CustomUserDetails {
 
         val user = try {
             userService.loadByUsername(username)
@@ -23,10 +23,11 @@ class UserDetailsServiceImpl(
             throw UsernameNotFoundException("Пользователь не найден: $username")
         }
 
-        return org.springframework.security.core.userdetails.User(
-            user.username,
-            user.password,
-            listOf(SimpleGrantedAuthority("ROLE_USER"))
+        return CustomUserDetails(
+            id = user.id,
+            usernameVal = user.username,
+            passwordVal = user.password,
+            role = listOf(SimpleGrantedAuthority("ROLE_USER"))
         )
     }
 }
