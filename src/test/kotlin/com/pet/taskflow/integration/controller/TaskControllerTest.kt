@@ -165,7 +165,7 @@ class TaskControllerTest @Autowired constructor(
     fun `updateTask should update task and return 200`() {
         val board = testDataLoader.createBoard(title = "Test Board", username = "user")
         val column = testDataLoader.createColumn(name = "To Do", board = board, position = 0)
-        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column)
+        val task = testDataLoader.createTask(title = "Task 1", boardColumn = column, description = "Task description")
 
         val request = UpdateTaskRequest(title = "Update Task", position = 1)
 
@@ -178,6 +178,7 @@ class TaskControllerTest @Autowired constructor(
             .andExpect(jsonPath("$.id").value(task.id))
             .andExpect(jsonPath("$.title").value("Update Task"))
             .andExpect(jsonPath("$.position").value(1))
+            .andExpect(jsonPath("$.description").value("Task description"))
             .andExpect(jsonPath("$.columnId").value(column.id))
     }
 

@@ -39,7 +39,7 @@ class TaskMapper {
         assignee: User?
     ): Task = existing.copy(
         title = request.title,
-        description = request.description,
+        description = request.description ?: existing.description,
         position = request.position ?: existing.position,
         assignee = assignee
     )
